@@ -1,8 +1,5 @@
 'use strict';
-const IKON_SUNTING = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 20 20" style="vertical-align: middle; margin-left: 3px; margin-bottom: 2px;"><path fill="#a22" d="M13.43 1.9a1.86 1.86 0 0 1 2.62 0l1.93 1.93a1.86 1.86 0 0 1 0 2.63l-10.9 10.9L2 18l.82-5.07z"/></svg>`;
-// ============================================================
-// FUNGSI UTILITAS (Penerjemah Tanggal & Presisi Wikidata)
-// ============================================================
+
 function formatWikidataDate(dateString, precision) {
   if (!dateString) return null;
   
@@ -303,7 +300,7 @@ function renderDynamicDataInPanel(qid) {
       return a.sortYear - b.sortYear;
     });
 
-let tautanSuntingEvent = `<a href="${wikiBaseUrl}#P793" target="_blank" class="sunting-link" title="Sunting peristiwa di Wikidata">${IKON_SUNTING}</a>`;
+let tautanSuntingEvent = `<a href="${wikiBaseUrl}#P793" target="_blank" class="sunting-link" title="Sunting peristiwa di Wikidata"></a>`;
 
     record.events.forEach(ev => {
       let capLabel = ev.label.charAt(0).toUpperCase() + ev.label.slice(1);
@@ -315,14 +312,14 @@ let tautanSuntingEvent = `<a href="${wikiBaseUrl}#P793" target="_blank" class="s
   // --- URUTAN 2: STATUS (KONDISI - P5817) ---
   if (record.kondisi) {
     let kondisiKecil = record.kondisi.toLowerCase();
-    let tautanSuntingKondisi = `<a href="${wikiBaseUrl}#P5817" target="_blank" class="sunting-link" title="Sunting kondisi di Wikidata">${IKON_SUNTING}</a>`;
+    let tautanSuntingKondisi = `<a href="${wikiBaseUrl}#P5817" target="_blank" class="sunting-link" title="Sunting kondisi di Wikidata"></a>`;
     html += `<p>Kondisi: ${kondisiKecil}${tautanSuntingKondisi}</p>`;
   }
 
   // --- URUTAN 3: KAPASITAS JEMAAH (P1083) ---
   if (record.kapasitas) {
     let formatAngka = parseInt(record.kapasitas).toLocaleString('id-ID');
-    let tautanSuntingKapasitas = `<a href="${wikiBaseUrl}#P1083" target="_blank" class="sunting-link" title="Sunting kapasitas di Wikidata">${IKON_SUNTING}</a>`;
+    let tautanSuntingKapasitas = `<a href="${wikiBaseUrl}#P1083" target="_blank" class="sunting-link" title="Sunting kapasitas di Wikidata"></a>`;
     html += `<p>Kapasitas: ${formatAngka} jemaah${tautanSuntingKapasitas}</p>`;
   }
 
@@ -684,11 +681,11 @@ let type = DESIGNATION_TYPES[designationQid];
 let wikiUrlTahun = `https://www.wikidata.org/wiki/${qid}#P571`; 
 
 if (record.tahunBerdiri) {
-  let tautanSunting = `<a href="${wikiUrlTahun}" target="_blank" class="sunting-link" title="Sunting tahun berdiri di Wikidata">${IKON_SUNTING}</a>`;
+  let tautanSunting = `<a href="${wikiUrlTahun}" target="_blank" class="sunting-link" title="Sunting tahun berdiri di Wikidata"></a>`;
   infoTahunHtml = `<p>Berdiri sejak: ${record.tahunBerdiri}${tautanSunting}</p>`;
 } else {
   // Wikipedia juga menggunakan ikon pensil yang sama untuk mengisi data kosong di infobox
-  let tautanTambah = `<a href="${wikiUrlTahun}" target="_blank" class="sunting-link" title="Tambahkan tahun berdiri di Wikidata">${IKON_SUNTING}</a>`;
+  let tautanTambah = `<a href="${wikiUrlTahun}" target="_blank" class="sunting-link" title="Tambahkan tahun berdiri di Wikidata"></a>`;
   infoTahunHtml = `<p>Didirikan: <span style="font-style: italic; color: #888;">Data belum tersedia</span>${tautanTambah}</p>`;
 }
 
@@ -746,7 +743,7 @@ if (record.tahunBerdiri) {
   let panelElem = document.createElement('div');
   
   panelElem.innerHTML =
-    `<a class="main-wikidata-link" href="https://www.wikidata.org/wiki/${qid}" title="Lihat di Wikidata">` +
+    `<a class="main-wikidata-link" href="https://www.wikidata.org/wiki/${qid}" target="_blank" title="Lihat di Wikidata">` +
     '<img src="img/wikidata_tiny_logo.png" alt="[Lihat item Wikidata]" /></a>' +
     titleHtml +
     figureHtml + 
@@ -870,7 +867,7 @@ function displayArticleExtract(title, elem) {
       elem.innerHTML =
         Object.values(data.query.pages)[0].extract.match(/<p[^]+?<\/p>/g).find(text => text.length > 50) +
         '<p class="wikipedia-link">' +
-          `<a href="https://id.wikipedia.org/wiki/${encodeURIComponent(title)}">` +
+          `<a href="https://id.wikipedia.org/wiki/${encodeURIComponent(title)}" target="_blank">` +
             '<img src="img/wikipedia_tiny_logo.png" alt="" />' +
             '<span>Baca selengkapnya di Wikipedia</span>' +
           '</a>' +
