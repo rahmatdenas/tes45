@@ -220,7 +220,6 @@ optgroup option {
   width: 100%;
   box-sizing: border-box;
   display: block;
-  background: #f3e9e9;   
   color: #888888;        
 }
 
@@ -249,6 +248,7 @@ optgroup option {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: red;
   cursor: pointer;
 }
 
