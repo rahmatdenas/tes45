@@ -165,6 +165,7 @@ optgroup option {
 
 #details .wikipedia-link {
   margin-bottom: 10px;
+    margin-top: 5px;
 }
 
 #details .wikipedia-link a {
