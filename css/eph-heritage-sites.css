@@ -237,16 +237,17 @@ optgroup option {
   outline: none;            /* Menghilangkan kotak tebal (hitam/biru) saat diklik */
   border-radius: 0;         /* Mencegah Apple membuat sudut melengkung secara paksa */
   border-bottom: 1px solid #eaa; /* Baru terapkan garis bawah yang Anda inginkan */
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 20px;
-  padding: 10px 20px;
+  padding: 10px 20px  12px 20px;
   width: 100%;
   box-sizing: border-box;
   display: block;
   color: #888888;        
   margin-top: -10px;
   background-color: transparent;
-  height: 40px;
+      height: 38px;
+    flex-shrink: 0;
 }
 
 /* Opsional: Efek saat kotak sedang diklik (fokus) agar garis bawah lebih tegas */
