@@ -11,7 +11,7 @@ const CARTO_LAYER_URL         = 'https://cartodb-basemaps-{s}.global.ssl.fastly.
 const CARTO_LAYER_ATTRIBUTION = 'Base map &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (data), <a href="https://carto.com/">CARTO</a> (style)';
 const TILE_LAYER_MAX_ZOOM     = 16;
 
-// KOORDINAT DIUBAH KE SKALA NASIONAL (INDONESIA)
+// KOORDINAT SKALA NASIONAL (INDONESIA)
 const MIN_PH_LAT              =   6.0;   // Ujung Utara (Weh)
 const MAX_PH_LAT              = -11.0;   // Ujung Selatan (Rote)
 const MIN_PH_LON              =  95.0;   // Ujung Barat (Sabang)
@@ -19,7 +19,7 @@ const MAX_PH_LON              = 141.0;   // Ujung Timur (Merauke)
 
 // Globals
 var Records = {};        // Main app database, keyed by QID
-var ProvinceIndex = {};  // PENAMBAHAN: Objek penampung kategori provinsi dinamis
+var ProvinceIndex = {};  // Objek penampung kategori provinsi dinamis
 var SparqlValuesClause;  // SPARQL "VALUES" clause containing the QIDs of all main Wikidata items
 var Map;                 // Leaflet map object
 var Cluster;             // Leaflet map cluster
@@ -30,19 +30,62 @@ var PrimaryDataIsLoaded   = false;  // Whether the non-lazy data is loaded
 
 window.addEventListener('load', init);
 
-
 // Initializes the app once the page has been loaded.
 function init() {
   initMap();
-  loadPrimaryData();
+  
+  // 1. TAHAN TARIKAN DATA OTOMATIS (Dinonaktifkan)
+  // loadPrimaryData(); 
+  
+  // 2. PASANG PENDETEKSI FORMULIR GERBANG
+  setupLandingForm();
+
   window.addEventListener('hashchange', processHashChange);
   Map.on('popupopen', function(e) { displayRecordDetails(e.popup._qid) });
+  
+  // 3. PAKSA MUNCULKAN HALAMAN LANDING SAAT PERTAMA DIBUKA
+  window.location.hash = 'landing';
+}
+
+// KODE BARU: Pengendali Formulir Gerbang Utama
+function setupLandingForm() {
+  let dropdown = document.getElementById('jenis-dropdown');
+  let inputTxt = document.getElementById('jenis-input');
+  let btnMulai = document.getElementById('btn-mulai');
+
+  if (!dropdown || !inputTxt || !btnMulai) return;
+
+  // Jika dropdown diganti
+  dropdown.addEventListener('change', function() {
+    if (this.value === 'custom') {
+      inputTxt.value = 'wd:Q'; // Teks pancingan awal
+      inputTxt.readOnly = false;
+      inputTxt.style.backgroundColor = '#ffffff';
+      inputTxt.focus();
+    } else {
+      inputTxt.value = this.value;
+      inputTxt.readOnly = true;
+      inputTxt.style.backgroundColor = '#f5f5f5';
+    }
+  });
+
+  // Jika tombol Cari ditekan
+  btnMulai.addEventListener('click', function() {
+    let finalValue = inputTxt.value.trim();
+    if (finalValue === '' || finalValue === 'wd:Q') {
+      alert('Tolong masukkan parameter Q-ID yang benar sayang :)');
+      return;
+    }
+    
+    // Ubah hash URL untuk masuk ke panel loading lalu mulai tarik data
+    window.location.hash = '';
+    displayPanelContent('loading');
+    loadPrimaryData();
+  });
 }
 
 // Initializes the Leaflet-based map.
 function initMap() {
-
-  // 1. MATIKAN ZOOM OTOMATIS: Tambahkan { zoomControl: false } di sini
   Map = new L.map('map', { zoomControl: false });
   Map.fitBounds([[MAX_PH_LAT, MAX_PH_LON], [MIN_PH_LAT, MIN_PH_LON]]);
 
@@ -60,16 +103,12 @@ function initMap() {
     'OpenStreetMap Carto' : osmLayer,
   };
   
-  // Tombol Layer dibiarkan utuh di posisi aslinya (topleft)
   L.control.layers(baseMaps, null, {position: 'topleft'}).addTo(Map);
 
-  // ========================================================
-  // 2. TAMBAHKAN ZOOM MANUAL DI KANAN BAWAH
   L.control.zoom({
     position: 'bottomright'
   }).addTo(Map);
 
-  // Lokasi saya (Otomatis akan menumpuk di bawah tombol Zoom)
   L.control.locate({
     position: 'bottomright',
     showCompass: false,
@@ -77,7 +116,6 @@ function initMap() {
         title: "Tunjukkan lokasi saya"
     }
   }).addTo(Map);
-  // ========================================================
 
   // Add powered by Wikidata map control
   let powered = L.control({ position: 'bottomleft' });
@@ -101,17 +139,8 @@ function initMap() {
   }).addTo(Map);
 }
 
-
-// Given a SPARQL query string, a per-result processing callback, and an optional
-// post-processing callback, queries WDQS using the given query, parses the query
-// results and calls the per-result callback on each result, calls the
-// post-processing callback after all results have been processed, then returns
-// a promise that resolves after all the processing or rejects with an HTTP
-// error code if there is an error querying WDQS. If SparqlValuesClause is not false,
-// this also updates the given query with the SparqlValuesClause value prior to
-// querying WDQS.
+// Given a SPARQL query string...
 function queryWdqsThenProcess(query, processEachResult, postprocessCallback) {
-
   let promise = new Promise((resolve, reject) => {
     let xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function() {
@@ -140,40 +169,33 @@ function queryWdqsThenProcess(query, processEachResult, postprocessCallback) {
   return promise;
 }
 
-
 // Enables the app. Should be called after the Wikidata queries have been processed.
 function enableApp() {
   PrimaryDataIsLoaded = true;
   processHashChange();
 }
 
-
-// Event handler that handles any change in the window URL hash. When all the
-// data is loaded, this updates the correct panel section and window title and
-// optionally updates the map to the relevant location. Otherwise, the panel
-// contents will show a loading indicator and the window will be the basic title.
-// This is also called when data has been progressively loaded in order
-// to update the panel during app initialization.
+// Event handler that handles any change in the window URL hash.
 function processHashChange() {
   let fragment = window.location.hash.replace('#', '');
 
-  if (fragment === 'about') {
+  if (fragment === 'landing') {
+    document.title = 'Mulai Eksplorasi – ' + BASE_TITLE;
+    displayPanelContent('landing');
+  }
+  else if (fragment === 'about') {
     document.title = 'About – ' + BASE_TITLE;
     displayPanelContent('about');
   }
-  // --- TAMBAHKAN BLOK INI ---
   else if (fragment === 'kontrib') {
-    // Jika fragment adalah 'kontrib', tampilkan panel Kontributor
     document.title = 'Jadi Kontributor – ' + BASE_TITLE;
     displayPanelContent('kontrib'); 
   }
-  // --------------------------
   else {
     if (!BootstrapDataIsLoaded) {
       displayPanelContent('loading');
     }
     else {
-      // Logika untuk menangani Masjid (misal Q123...) atau kembali ke Index
       if (fragment === '' || !(fragment in Records)) {
         window.location.hash = '';  // Disable invalid fragments
         document.title = BASE_TITLE;
@@ -187,12 +209,10 @@ function processHashChange() {
   }
 }
 
-
-// Given a record QID, if the record has a map marker, updates the map to show
-// and center on the map marker and open its popup if needed.
+// Given a record QID, if the record has a map marker, updates the map...
 function activateMapMarker(qid) {
   let record = Records[qid];
-  if (!record.mapMarker) return;  // Some records (grouped heritage sites) don't have markers
+  if (!record.mapMarker) return; 
   Cluster.zoomToShowLayer(
     record.mapMarker,
     function() {
@@ -202,9 +222,7 @@ function activateMapMarker(qid) {
   );
 }
 
-
-// Given the ID of the panel content ID, displays the corresponding
-// panel content and updates the navigation menu state as well.
+// Given the ID of the panel content ID, displays the corresponding panel content...
 function displayPanelContent(id) {
   document.querySelectorAll('.panel-content').forEach(content => {
     content.style.display = (content.id === id) ? content.dataset.display : 'none';
@@ -219,29 +237,22 @@ function displayPanelContent(id) {
   });
 }
 
-
-// Given a record QID, displays the record's details on the side panel,
-// generating it as needed. Also updates the window title and URL hash.
-// If the primary data is not yet loaded, shows the loading panel.
+// Given a record QID, displays the record's details on the side panel...
 function displayRecordDetails(qid) {
   let record = Records[qid];
   window.location.hash = `#${qid}`;
   document.title = `${record.indexTitle} – ${BASE_TITLE}`;
   
   if (PrimaryDataIsLoaded) {
-    // Jika panel belum pernah dibuat untuk bangunan ini
     if (!record.panelElem) {
-      generateRecordDetails(qid); // Buat HTML beserta placeholder loading-nya
+      generateRecordDetails(qid); 
       
-      // === KUNCI JAWABANNYA ADA DI SINI (PEMICU FASE 5) ===
-      // Kita paksa pancingan dilempar tepat setelah placeholder dibuat!
       if (typeof populateImportantEventsData === 'function') {
         populateImportantEventsData(qid);
       }
       if (typeof populateHistoricalImagesData === 'function') {
         populateHistoricalImagesData(qid);
       }
-      // ====================================================
     }
     
     let detailsElem = document.getElementById('details');
@@ -253,17 +264,11 @@ function displayRecordDetails(qid) {
   }
 }
 
-
-// Given a Commons image filename and an array of class names, generates
-// a figure HTML string, returns it, and calls the Commons API to fetch
-// and insert the image attribution if needed. If the filename is false,
-// the figure element will indicate "No photo available".
-function generateFigure(filename, title = "Masjid", classNames = []) {
+// Given a Commons image filename and an array of class names, generates a figure HTML string...
+function generateFigure(filename, title = "Bangunan", classNames = []) {
   if (filename) {
-    // 1. Buat ID unik untuk setiap figure
     let uniqueId = 'caption-' + Math.random().toString(36).substr(2, 9);
 
-    // Fetch the image attribution asynchronously then add it to the figure element
     loadJsonp(
       COMMONS_API_URL,
       {
@@ -276,24 +281,16 @@ function generateFigure(filename, title = "Masjid", classNames = []) {
       function(data) {
         let metadata = Object.values(data.query.pages)[0].imageinfo[0].extmetadata;
         
-// Cek apakah metadata.Artist ada sebelum mengakses value-nya
         let artistHtml = '';
         if (metadata.Artist) {
             artistHtml = metadata.Artist.value.trim();
-            
-            // 1. Bersihkan semua tag HTML kecuali <a>
             artistHtml = artistHtml.replace(/<(?!\/?a ?)[^>]+>/g, '');
-            
-            // 2. KOREKSI TEKS GANDA: Bersihkan masalah "Unknown author" dari Wikimedia
             artistHtml = artistHtml.replace(/Unknown authorUnknown author/gi, 'Tak diketahui');
-            artistHtml = artistHtml.replace(/UnknownUnknown/gi, 'Tak diketahui'); // Jaga-jaga jika formatnya hanya "Unknown"
+            artistHtml = artistHtml.replace(/UnknownUnknown/gi, 'Tak diketahui');
             
-            // 3. Ubah tautan relatif menjadi absolut
             if (artistHtml.search('href="//') >= 0) {
               artistHtml = artistHtml.replace(/href="(?:https?:)?\/\//g, 'href="https://');
             }
-            
-            // 4. Sisipkan target="_blank"
             artistHtml = artistHtml.replace(/<a /gi, '<a target="_blank" ');
         }
 
@@ -303,13 +300,11 @@ function generateFigure(filename, title = "Masjid", classNames = []) {
           licenseHtml = licenseHtml.replace(/-/g, '&#8209;');
           licenseHtml = `[${licenseHtml}]`;
           if (metadata.LicenseUrl) {
-            // Bagian lisensi ini sudah memiliki target="_blank", jadi aman!
             licenseHtml = `<a href="${metadata.LicenseUrl.value}" target="_blank">${licenseHtml}</a>`;
           }
           licenseHtml = ' ' + licenseHtml;
         }
 
-        // 2. Tembak langsung ke ID uniknya
         let targetCaption = document.getElementById(uniqueId);
         if (targetCaption) {
             targetCaption.innerHTML = artistHtml + licenseHtml;
@@ -323,7 +318,6 @@ function generateFigure(filename, title = "Masjid", classNames = []) {
         `<a href="${COMMONS_WIKI_URL_PREF}File:${encodedFilename}" target="_blank">` +
           `<img class="loading" src="${COMMONS_WIKI_URL_PREF}Special:FilePath/${encodedFilename}?width=500" alt="" onload="this.className=''">` +
         '</a>' +
-        // 3. Pasang ID unik di elemen figcaption
         `<figcaption id="${uniqueId}">(Loading…)</figcaption>` +
       '</figure>'
     );
@@ -335,16 +329,13 @@ let namaAmanURL = encodeURIComponent(title);
   }
 }
 
-
 // Given a WDQS query result image data, returns the base image filename.
 function extractImageFilename(image) {
   let regex = /https?:\/\/commons\.wikimedia\.org\/wiki\/Special:FilePath\//;
   return decodeURIComponent(image.value.replace(regex, ''));
 }
 
-
-// Given a WDQS result record and key name, takes the date value based on
-// the key name and then returns a formatted date string.
+// Given a WDQS result record and key name, takes the date value based on the key name...
 function parseDate(result, keyName) {
   let dateVal = result[keyName].value;
   if (result[keyName + 'Precision'].value === YEAR_PRECISION) {
