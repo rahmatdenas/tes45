@@ -184,28 +184,56 @@ function enableApp() {
 function processHashChange() {
   let fragment = window.location.hash.replace('#', '');
 
+  // Tarik panel ke atas secara otomatis di Mobile
   if (typeof window.setMobilePanelExpanded === 'function') {
     window.setMobilePanelExpanded(true);
   }
 
-  // Jika kembali ke Landing, pastikan semua memori dan koneksi dibersihkan
+  // 1. Halaman Beranda (Landing)
   if (fragment === 'landing') {
-    resetApp(); // Panggil pembersih
+    resetApp(); // Pastikan memori bersih setiap kali kembali ke Beranda
     document.title = 'Mulai Eksplorasi – ' + BASE_TITLE;
     displayPanelContent('landing');
   }
+  // 2. Halaman Tentang
   else if (fragment === 'about') {
     document.title = 'About – ' + BASE_TITLE;
     displayPanelContent('about');
   }
+  // 3. Halaman Kontributor
   else if (fragment === 'kontrib') {
     document.title = 'Jadi Kontributor – ' + BASE_TITLE;
     displayPanelContent('kontrib'); 
   }
+  // 4. Halaman Daftar (Index) & Detail Bangunan
   else {
-    if (!BootstrapDataIsLoaded) {
-      displayPanelContent('loading');
-    }
+    // === KUNCI PERBAIKAN: CEK APAKAH DATA SUDAH DITARIK? ===
+    if (!PrimaryDataIsLoaded) {
+      
+      if (fragment === '') {
+        // Jika pengguna menekan tab "Daftar" tapi belum ada data
+        document.title = 'Daftar Kosong – ' + BASE_TITLE;
+        
+        let indexList = document.getElementById('index-list');
+        if (indexList) {
+          // Suntikkan pesan Empty State yang cantik
+          indexList.innerHTML = `
+            <div style="padding: 40px 20px; text-align: center; line-height: 1.6;">
+              <h3 style="margin-bottom: 10px; color: #333;">Data Belum Ditarik</h3>
+              <p style="color: #666; margin-bottom: 25px;">Anda belum melakukan pencarian. Silakan pilih jenis entitas dan mulai eksplorasi Anda di halaman Beranda.</p>
+              <a href="#landing" style="background-color: #d32f2f; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Kembali ke Beranda</a>
+            </div>
+          `;
+        }
+        displayPanelContent('index');
+      } else {
+        // Jika pengguna iseng mengetik URL bangunan secara manual tapi belum narik data
+        // Lempar paksa kembali ke Landing!
+        window.location.hash = 'landing';
+      }
+      
+    } 
+    // === JIKA DATA SUDAH BERHASIL DITARIK ===
     else {
       if (fragment === '' || !(fragment in Records)) {
         window.location.hash = '';  
