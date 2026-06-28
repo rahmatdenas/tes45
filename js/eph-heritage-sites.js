@@ -582,7 +582,7 @@ function renderDynamicDataInPanel(qid) {
         formattedValue = formattedValue.charAt(0).toUpperCase() + formattedValue.slice(1);
       }
 
-      html += `<p><strong>${titleLabel}:</strong> ${formattedValue}</p>`;
+      html += `<p>${titleLabel}: ${formattedValue}</p>`;
     }
   }
 
