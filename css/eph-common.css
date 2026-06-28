@@ -728,3 +728,25 @@ position: absolute;
 /* Penyesuaian ukuran khusus untuk layar sentuh (HP) yang tombolnya membesar otomatis  belum tau gunanya apa */
 .leaflet-touch .ikon-gps-custom {
 }
+
+/* Efek Cincin Menyebar */
+@keyframes cluster-pulse-ring {
+  0% {
+    /* Warna awal, sesuaikan nilai RGB-nya jika ingin warna lain. Ini warna merah bata. */
+    box-shadow: 0 0 0 0 rgba(204, 0, 0, 0.7); 
+  }
+  70% {
+    /* Cincin membesar hingga 20px dan memudar */
+    box-shadow: 0 0 0 20px rgba(204, 0, 0, 0); 
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(204, 0, 0, 0);
+  }
+}
+
+/* Kelas yang akan ditempelkan oleh JavaScript */
+.cluster-efek-denyut {
+  animation: cluster-pulse-ring 1.5s infinite;
+  border-radius: 50%; /* Memastikan bentuk denyutnya melingkar */
+  z-index: 1000 !important; /* Memastikan gelembung ini tampil di atas elemen peta lainnya */
+}
