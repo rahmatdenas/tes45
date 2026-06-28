@@ -713,6 +713,7 @@ optgroup option { padding-left: 10px; }
 .leaflet-top .leaflet-control-attribution {
 text-align: center;
        width: 100%;
+   padding: 0px;
       -webkit-text-size-adjust: 100%; /* Mematikan zoom font otomatis di Safari iOS */
     text-size-adjust: 100%; /* Standar untuk browser lain */
 }
