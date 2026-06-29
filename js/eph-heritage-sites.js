@@ -621,7 +621,7 @@ else if (key === 'lamanResmi') {
       <h2 style="margin-top:20px; margin-bottom:10px;">Resep & Panduan</h2>
       <p class="wikipedia-link" style="margin-bottom: 15px;">
         <a href="${urlWikibooks}" target="_blank">
-          <img src="img/wikicommons_tiny_logo.png" alt="" />
+          <img src="img/wikibook_tiny_logo.png" alt="" />
           <span>Lihat di Wikibuku</span>
         </a>
       </p>
