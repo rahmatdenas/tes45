@@ -528,7 +528,6 @@ optgroup option { padding-left: 10px; }
 #details .designations li {
   position: relative;
   list-style: none;
-  min-height: 50px;
   margin-right: 0;
 }
 #details .designations li h3 {
